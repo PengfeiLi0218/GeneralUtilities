@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import priv.lipengfei.basic.TreeNode;
 
-/***
+/**
  * sum(a)>10
  */
 @AllArgsConstructor
