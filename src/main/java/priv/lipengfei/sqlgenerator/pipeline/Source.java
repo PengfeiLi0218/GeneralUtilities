@@ -1,13 +1,20 @@
 package priv.lipengfei.sqlgenerator.pipeline;
 
+import com.ibm.icu.impl.UResource;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import priv.lipengfei.sqlgenerator.cells.Cell;
+import tech.tablesaw.api.Table;
 
+import java.util.Arrays;
 import java.util.List;
 
+/**
+ * @author lipengfei
+ */
 @NoArgsConstructor
 @Getter
-public class Source extends Item {
+public class Source extends Cell {
     private String table;
     private List<String> tableCols;
 
@@ -26,8 +33,7 @@ public class Source extends Item {
     }
 
     @Override
-    public DataTable execute(DataTable table) {
-        return new DataTable(this.table)
-                .setTableCols(this.tableCols);
+    public Table execute(Table table) {
+        return table.selectColumns(tableCols.toArray(new String[0]));
     }
 }

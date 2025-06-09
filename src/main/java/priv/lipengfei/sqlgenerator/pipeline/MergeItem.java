@@ -1,28 +1,26 @@
 package priv.lipengfei.sqlgenerator.pipeline;
 
+import priv.lipengfei.sqlgenerator.cells.Cell;
+import tech.tablesaw.api.Table;
+
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * 多进一出
+ * @author lipengfei
  */
-public class MergeItem{
-    private String tableA;
-    private String tableB;
-    private String joinType = "left";
-    private List<Filter> conditions;
-
-    public MergeItem setTableA(String table) {
-        this.tableA = table;
-        return this;
-    }
-
-    public MergeItem setTableB(String tableB) {
-        this.tableB = tableB;
-        return this;
-    }
+public class MergeItem extends Cell {
+    private String joinType = "left"; // join类型，默认为left join
+    private final List<Filter> conditions = new ArrayList<>();
 
     public MergeItem setConditions(List<Filter> conditions) {
-        this.conditions = conditions;
+        this.conditions.addAll(conditions);
+        return this;
+    }
+
+    public MergeItem setConditions(Filter... conditions) {
+        this.conditions.addAll(List.of(conditions));
         return this;
     }
 
@@ -40,9 +38,14 @@ public class MergeItem{
     @Override
     public String toString() {
         return String.format("(%s) a %s join (%s) b on %s",
-                tableA, joinType, tableB,
-                String.join(" AND ",
-                        conditions.stream().map(Filter::enumRoot).toList()
+                "mainTable", joinType, "branchTable",
+                String.join(" AND ", new ArrayList<>()
+//                        conditions.stream().map(Filter::enumRoot).toList()
                 ));
+    }
+
+    @Override
+    public Table execute(Table table) {
+        return table;
     }
 }

@@ -8,6 +8,9 @@ import lombok.Setter;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author lipengfei
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Setter
@@ -25,5 +28,13 @@ public class TreeNode {
         this.childNodes.add(childNode);
     }
 
+    public TreeNode setChildNodes(TreeNode... childNodes) {
+        this.childNodes.addAll(List.of(childNodes));
+        return this;
+    }
 
+    public TreeNode setChildNodes(List<TreeNode> childNodes) {
+        this.childNodes.addAll(childNodes);
+        return this;
+    }
 }

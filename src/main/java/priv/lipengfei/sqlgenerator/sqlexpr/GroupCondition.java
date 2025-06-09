@@ -1,8 +1,10 @@
 package priv.lipengfei.sqlgenerator.sqlexpr;
 
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import priv.lipengfei.sqlgenerator.pipeline.Transformation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,11 +12,14 @@ import java.util.List;
 /***
  * Group By
  * TODO:
+ * @author lipengfei
  */
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
+@Data
 public class GroupCondition {
+    private List<Transformation> transformExprs = new ArrayList<>();
     private List<String> cols = new ArrayList<>();
     private List<WhereCondition> havingConditions = new ArrayList<>();
 
@@ -23,9 +28,15 @@ public class GroupCondition {
         return this;
     }
 
+    public GroupCondition addTransformExprs(Transformation... te){
+        this.transformExprs.addAll(List.of(te));
+        return this;
+    }
+
     public GroupCondition addHavingCondition(WhereCondition hc){
-        if(this.havingConditions==null)
+        if(this.havingConditions==null) {
             this.havingConditions = new ArrayList<>();
+        }
         this.havingConditions.add(hc);
         return this;
     }
@@ -47,8 +58,9 @@ public class GroupCondition {
 
     private List<String> havingConditionToString(){
         List<String> ls = new ArrayList<>();
-        if(this.havingConditions==null)
+        if(this.havingConditions==null) {
             this.havingConditions = new ArrayList<>();
+        }
         for (WhereCondition hc : this.havingConditions) {
             ls.add(hc.toString());
         }
@@ -59,8 +71,9 @@ public class GroupCondition {
     public String toString() {
         String s = String.format("GROUP BY %s", String.join(",", cols));
 
-        if(havingConditions!=null && !havingConditions.isEmpty())
+        if(havingConditions!=null && !havingConditions.isEmpty()) {
             s +=  String.format(" HAVING %s", String.join(",", this.havingConditionToString()));
+        }
 
         return s;
     }

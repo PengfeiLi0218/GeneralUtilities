@@ -3,22 +3,32 @@ package priv.lipengfei.sqlgenerator.sqlexpr;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import priv.lipengfei.basic.TreeNode;
-
-import java.util.ArrayList;
+import tech.tablesaw.api.Table;
+import tech.tablesaw.selection.Selection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * @author lipengfei
+ */
 @AllArgsConstructor
 @Getter
 public class LogisticRelation extends TreeNode {
     private String role; // 角色分为root、and和or
 
     @Override
-    public void setChildNodes(List<TreeNode> childNodes) {
+    public LogisticRelation setChildNodes(TreeNode... childNodes) {
         // List要指定ArrayList等形式，不能用this.childNodes = childNodes;，会用bug
         // TODO：修改其他相关问题
-        this.childNodes = new ArrayList<>(childNodes);
+        this.childNodes.addAll(List.of(childNodes));
+        return this;
+    }
+
+    @Override
+    public LogisticRelation setChildNodes(List<TreeNode> childNodes) {
+        this.childNodes.addAll(childNodes);
+        return this;
     }
 
     /**
@@ -80,5 +90,26 @@ public class LogisticRelation extends TreeNode {
 
     private void extendChild(List<TreeNode> childNodes) {
         this.childNodes.addAll(childNodes);
+    }
+
+    public Selection toSelection(Table table) throws Exception {
+        Selection selections = null;
+        for (TreeNode childNode : this.childNodes) {
+            Selection tmp = null;
+            if(childNode instanceof LogisticRelation){
+                tmp = ((LogisticRelation) childNode).toSelection(table);
+            }else if(childNode instanceof WhereCondition){
+                tmp = ((WhereCondition) childNode).toSelection(table);
+            }
+
+            if(selections == null){
+                selections = tmp;
+            }else if("and".equals(this.role)){
+                selections = selections.and(tmp);
+            }else if("or".equals(this.role)){
+                selections = selections.or(tmp);
+            }
+        }
+        return selections;
     }
 }

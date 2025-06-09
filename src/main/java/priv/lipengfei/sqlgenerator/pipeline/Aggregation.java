@@ -1,49 +1,50 @@
 package priv.lipengfei.sqlgenerator.pipeline;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import priv.lipengfei.sqlgenerator.sqlexpr.SelectExpression;
+import priv.lipengfei.sqlgenerator.cells.Cell;
 import priv.lipengfei.utils.Utils;
+import tech.tablesaw.aggregate.AggregateFunctions;
+import tech.tablesaw.api.Table;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
+
+/**
+ * @author lipengfei
+ */
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter
-public class Aggregation extends Item {
+@Data
+public class Aggregation extends Cell {
     private List<String> grpCols = new ArrayList<>();
-    private List<SelectExpression> aggCols = new ArrayList<>();
+    private List<Transformation> aggCols = new ArrayList<>();
 
-    public Aggregation addAggFunc(SelectExpression af){
-        this.aggCols.add(af);
+    public Aggregation addAggFuncs(Transformation... af){
+        this.aggCols.addAll(List.of(af));
         return this;
     }
 
-    public Aggregation addGrpCol(String col){
-        this.grpCols.add(col);
+    public Aggregation addGrpCols(String... col){
+        this.grpCols.addAll(List.of(col));
         return this;
-    }
-
-    // 获得聚合函数的字段
-    private List<String> getAggFuncVars(){
-        return this.aggCols.parallelStream().flatMap(item -> item.getVar().stream())
-                .distinct().collect(Collectors.toList());
     }
 
     @Override
-    public DataTable execute(DataTable table) {
+    public Table execute(Table table) {
         // 判断grpCol和aggCols的字段是table数据表的子集
-        assert Utils.subset(table.getTableCols(), grpCols);
-        assert Utils.subset(table.getTableCols(), getAggFuncVars());
 
-        return new DataTable()
-                .setTableCols(grpCols)
-                .extendTableCols(
-                    aggCols.stream().map(SelectExpression::getOutputName).collect(Collectors.toList())
-                );
+        for (Transformation aggCol : aggCols) {
+            String func = aggCol.getExpression().getFunc();
+            String col = aggCol.getExpression().getVar().get(0);
+            if("mean".equals(func) || "avg".equals(func)){
+//                AggregateFunctions.mean(table.doubleColumn(col))
+//                table.summarize(col, mean).by(this.grpCols.toArray(new String[0]));
+            }
+        }
+        return table;
     }
 
     @Override
@@ -51,9 +52,8 @@ public class Aggregation extends Item {
         return String.format("select %s,%s from %s group by %s",
                 String.join(",", this.grpCols),
                 String.join(",", Utils.objsToString(this.aggCols)),
-                this.name,
+                "tmp",
                 String.join(",", this.grpCols)
         );
     }
-
 }
