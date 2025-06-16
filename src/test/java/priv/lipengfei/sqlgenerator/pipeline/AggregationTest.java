@@ -41,12 +41,12 @@ class AggregationTest {
         System.out.println(summary.print());
 
         // 2. 单列分组 + 多个聚合函数（等效SQL: SELECT Region, COUNT(*), SUM(Revenue), AVG(Quantity) FROM sales GROUP BY Region）
-//        Table regionSummary = sales.summarize(
-//                "Region", "Revenue", "Quantity",
-//                AggregateFunctions.count, AggregateFunctions.sum, AggregateFunctions.mean
-//        ).by("Region");
-//
-//        System.out.println("\n按地区汇总:");
-//        System.out.println(regionSummary.print());
+        Table regionSummary = sales.summarize(
+                "Region", "Revenue", "Quantity",
+                AggregateFunctions.count, AggregateFunctions.sum, AggregateFunctions.mean
+        ).by("Region");
+
+        System.out.println("\n按地区汇总:");
+        System.out.println(regionSummary.print());
     }
 }
