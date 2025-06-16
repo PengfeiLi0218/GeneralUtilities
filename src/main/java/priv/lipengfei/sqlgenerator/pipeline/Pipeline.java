@@ -89,47 +89,42 @@ public class Pipeline {
         StringBuilder tmp = new StringBuilder();
 
         for (Cell item : this.nodes) {
-            switch (item.getClass().getSimpleName()) {
-                case "Source" -> {
-                    sqlQuery.addTable(((Source) item).getTable());
+            if (item instanceof Source){
+                sqlQuery.addTable(((Source) item).getTable());
+            }else if(item instanceof Selection){
+                if (Objects.equals(((Selection) item).getDistinctFlag(), "distinct")) {
+                    sqlQuery.setDistinctFlag("distinct");
                 }
-                case "Selection" -> {
-                    if (Objects.equals(((Selection) item).getDistinctFlag(), "distinct")) {
-                        sqlQuery.setDistinctFlag("distinct");
-                    }
-                    sqlQuery.addSelectExprs(((Selection) item).getCols());
-                }
-                case "Transformation" -> {
-                    sqlQuery.addTransformExpr(((Transformation) item));
-                }
-                case "Filter" -> {
-                    sqlQuery.addFilter(((Filter) item));
-                }
-                case "Aggregation" -> { // 聚合操作
-                    // 如果select expr有操作，则生成一个临时表
-                    // 重新建一个表
-                    Aggregation aggregation = (Aggregation) item;
-                    // 如果已经有selection在前，则创建新的临时表
-                    if (!sqlQuery.getSelectExprs().isEmpty() || !sqlQuery.getTransformExprs().isEmpty()) {
-                        String s = String.format("create temporary table previous_%s as %s\n", aggregation.getId(), sqlQuery);
-                        log.info(s);
-                        tmp.append(s);
-                        sqlQuery = new SqlQuery();
-                        sqlQuery.addTable("previous_"+aggregation.getId());
-                    }
-                    sqlQuery.addGroupCondition(new GroupCondition()
-                            .extendCols(aggregation.getGrpCols()));
-                    sqlQuery.addTransformExpr(aggregation.getAggCols().toArray(Transformation[]::new));
-                    String s = String.format("create temporary table post_%s as %s\n", aggregation.getId(), sqlQuery);
-
-                    sqlQuery.addTransformExpr(aggregation.getAggCols().toArray(Transformation[]::new));
-
+                sqlQuery.addSelectExprs(((Selection) item).getCols());
+            }else if(item instanceof Transformation) {
+                sqlQuery.addTransformExpr(((Transformation) item));
+            }else if(item instanceof Filter){
+                sqlQuery.addFilter(((Filter) item));
+            }else if(item instanceof Aggregation) { // 聚合操作
+                // 如果select expr有操作，则生成一个临时表
+                // 重新建一个表
+                Aggregation aggregation = (Aggregation) item;
+                // 如果已经有selection在前，则创建新的临时表
+                if (!sqlQuery.getSelectExprs().isEmpty() || !sqlQuery.getTransformExprs().isEmpty()) {
+                    String s = String.format("create temporary table previous_%s as %s\n", aggregation.getId(), sqlQuery);
+                    log.info(s);
                     tmp.append(s);
-                    // 重建一个表
                     sqlQuery = new SqlQuery();
-                    sqlQuery.addTable("post_"+aggregation.getId());
+                    sqlQuery.addTable("previous_"+aggregation.getId());
                 }
-                default -> log.error("not support cell type: {}", item.getClass().getSimpleName());
+                sqlQuery.addGroupCondition(new GroupCondition()
+                        .extendCols(aggregation.getGrpCols()));
+                sqlQuery.addTransformExpr(aggregation.getAggCols().toArray(Transformation[]::new));
+                String s = String.format("create temporary table post_%s as %s\n", aggregation.getId(), sqlQuery);
+
+                sqlQuery.addTransformExpr(aggregation.getAggCols().toArray(Transformation[]::new));
+
+                tmp.append(s);
+                // 重建一个表
+                sqlQuery = new SqlQuery();
+                sqlQuery.addTable("post_"+aggregation.getId());
+            }else{
+                log.error("not support cell type: {}", item.getClass().getSimpleName());
             }
             log.info("{} ===> {}", item, sqlQuery);
         }

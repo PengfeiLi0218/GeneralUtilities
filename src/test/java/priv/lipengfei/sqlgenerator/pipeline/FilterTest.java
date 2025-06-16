@@ -1,7 +1,7 @@
 package priv.lipengfei.sqlgenerator.pipeline;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
 import priv.lipengfei.sqlgenerator.sqlexpr.LogisticRelation;
 import priv.lipengfei.sqlgenerator.sqlexpr.WhereCondition;
 import tech.tablesaw.api.DoubleColumn;
@@ -12,12 +12,10 @@ import tech.tablesaw.api.Table;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 class FilterTest {
     List<Filter> testcase = new ArrayList<>();
     Table table = null;
-    @BeforeEach
+    @Before
     void setUp() {
         testcase.add(new Filter(
             new WhereCondition()
@@ -57,6 +55,7 @@ class FilterTest {
 
 
         table = Table.create("testtable").addColumns(a, b, c, d, e);
+        System.out.println(table.print());
     }
 
     @Test
