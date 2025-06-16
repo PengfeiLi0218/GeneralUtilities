@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import priv.lipengfei.sqlgenerator.cells.Cell;
 import priv.lipengfei.utils.Utils;
+import tech.tablesaw.aggregate.AggregateFunction;
 import tech.tablesaw.aggregate.AggregateFunctions;
 import tech.tablesaw.api.Table;
 
@@ -35,16 +36,39 @@ public class Aggregation extends Cell {
     @Override
     public Table execute(Table table) {
         // 判断grpCol和aggCols的字段是table数据表的子集
-
+        List<String> cols = new ArrayList<>();
+        List<AggregateFunction> aggfuncs = new ArrayList<>();
+        List<String> selectCols = new ArrayList<>();
         for (Transformation aggCol : aggCols) {
-            String func = aggCol.getExpression().getFunc();
-            String col = aggCol.getExpression().getVar().get(0);
-            if("mean".equals(func) || "avg".equals(func)){
-//                AggregateFunctions.mean(table.doubleColumn(col))
-//                table.summarize(col, mean).by(this.grpCols.toArray(new String[0]));
+            if("aggregation".equals(aggCol.getType())) {
+                cols.add(aggCol.getExpression().getVar().get(0));
+                String func = aggCol.getExpression().getFunc();
+
+                if("sum".equalsIgnoreCase(func)) {
+                    aggfuncs.add(AggregateFunctions.sum);
+                    func = "Sum";
+                }else if("mean".equalsIgnoreCase(func)) {
+                    aggfuncs.add(AggregateFunctions.mean);
+                    func = "Mean";
+                }else if("count".equalsIgnoreCase(func)) {
+                    aggfuncs.add(AggregateFunctions.count);
+                    func = "Count";
+                }else if("min".equalsIgnoreCase(func)) {
+                    aggfuncs.add(AggregateFunctions.min);
+                    func = "Min";
+                }else if("max".equalsIgnoreCase(func)){
+                    aggfuncs.add(AggregateFunctions.max);
+                    func = "Max";
+                }
+
+                selectCols.add(String.format("%s [%s]", func, aggCol.getExpression().getVar().get(0)));
             }
         }
-        return table;
+
+        selectCols.addAll(grpCols);
+        return table.summarize(cols, aggfuncs.toArray(new AggregateFunction[0]))
+                .by(grpCols.toArray(new String[0]))
+                .selectColumns(selectCols.toArray(new String[0]));
     }
 
     @Override
